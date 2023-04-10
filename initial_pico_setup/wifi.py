@@ -1,9 +1,9 @@
 import network
 import ubinascii
 
-ssid = 'ICS 23 Twenty'
-# specific to the Pico Matt and Sam were working on as of 4/5/23, registered under Matt's wifi account
-password = 'bzYqqdBD'
+# store specific logins on the pico itself, not GitHub
+ssid = 'IASTATE'
+password = ''
 
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)

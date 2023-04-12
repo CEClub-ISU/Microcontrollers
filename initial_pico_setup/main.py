@@ -4,6 +4,8 @@ import machine
 from time import sleep
 import urequests
 import json
+import network
+import ubinascii
 
 # hardware setup
 # pin declarations
@@ -64,6 +66,25 @@ headers = {
 rtc = machine.RTC()
 # (year, month, day, weekday, hours, minutes, seconds, subseconds)
 rtc.datetime((2023, 4, 5, 4, 17, 14, 45, 0))
+
+# sets up wifi connection
+def wifiSetup():
+    # store specific logins on the pico itself, not GitHub
+    ssid = 'IASTATE'
+    password = ''
+
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+    wlan.connect(ssid, password)
+
+    mac = ubinascii.hexlify(network.WLAN().config('mac'),':').decode()
+    print(mac)
+
+    while not wlan.isconnected():
+        pass
+
+    print('Connected to network:', ssid)
+    print('Network config:', wlan.ifconfig())
 
 # gets current values
 def getData():
@@ -131,6 +152,8 @@ def checkVariables():
         response = urequests.request("POST", url, headers=headers, data=payload)
     alertMessages = []
 
+# start of main
+wifiSetup()
 # syncs program to 15 minute clock
 while rtc.datetime()[5] not in {0, 15, 30, 45}:
     sleep(1)
@@ -146,3 +169,4 @@ while True:
     checkVariables()
     # waits 15 minutes
     sleep(60*15)
+

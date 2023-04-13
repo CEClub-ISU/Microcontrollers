@@ -161,7 +161,7 @@ while rtc.datetime()[5] not in {0, 15, 30, 45}:
 while True:
     if (rtc.datetime()[5] == 0):
         isHour = 1
-    else
+    else:
         isHour = 0
     # take current readings
 #     currAirTemp = readAirTemp()

@@ -57,7 +57,7 @@ entryNotice = 0
 entryNoticeInd = "No Entry Detected"
 
 # Discord webhook setup
-url = "https://discord.com/api/webhooks/1093308097952493719/09R13Z76ZepnLa6WU1ikcT0R8ChfdkG5jQ6GqS_do4kF2w0QnnG3ORWO2MTqneFeyoQX"
+url = "https://discord.com/api/webhooks/1151599605562212383/0W0Eq4UDqSzl8pFzSc9SXUBRrkPAdTtijETcmweGmEs4hrHOmBm8HFwZR0uhXFkDA51F"
 headers = {
     'Content-Type': 'application/json'
 }

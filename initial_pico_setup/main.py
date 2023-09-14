@@ -49,17 +49,23 @@ minWaterTemp = 63.0
 
 #declare Light Level variables
 currLight = -1
-currLightInd = "No Data"
+currLightInd = -1
 minLight = -1
 
 #declare Entry Notice variable
 entryNotice = 0
-entryNoticeInd = "No Entry Detected"
+entryNoticeInd = 0
 
 # Discord webhook setup
-url = "https://discord.com/api/webhooks/1151599605562212383/0W0Eq4UDqSzl8pFzSc9SXUBRrkPAdTtijETcmweGmEs4hrHOmBm8HFwZR0uhXFkDA51F"
-headers = {
+discordUrl = "https://discord.com/api/webhooks/1151599605562212383/0W0Eq4UDqSzl8pFzSc9SXUBRrkPAdTtijETcmweGmEs4hrHOmBm8HFwZR0uhXFkDA51F"
+discordHeaders = {
     'Content-Type': 'application/json'
+}
+
+# Google Forms setup
+formsUrl = "https://docs.google.com/forms/u/0/d/e/1FAIpQLSc9sOZXXNuvpBrPZ68fkTmNUmd6GxRRtQcM2YJ9qmGWYtZNAw/formResponse"
+formsHeaders = {
+    'Content-Type': 'application/x-www-form-urlencoded'
 }
 
 # sets real time clock
@@ -69,7 +75,7 @@ rtc.datetime((2023, 4, 5, 4, 17, 14, 45, 0))
 
 # sets up wifi connection
 def wifiSetup():
-    # store specific logins on the pico itself, not GitHub
+    # store logins on the pico itself, not GitHub
     ssid = 'IASTATE'
     password = ''
 
@@ -86,15 +92,22 @@ def wifiSetup():
     print('Connected to network:', ssid)
     print('Network config:', wlan.ifconfig())
 
-# gets current values
+# gets current values formatted for Discord
 def getData():
     embeds = [{"type": "rich","title": "Current Readings","fields": [{"name": "Air Temperature","value": str(currAirTemp) + " F","inline": "true"},{"name": "Humidity","value": str(currHum) + " %","inline": "true"},{"name": "PH","value": str(currPH),"inline": "true"},{"name": "Electric Conductivity","value": str(currElecCond) + " uS/cm","inline": "true"},{"name": "Water Temperature","value": str(currWaterTemp) + " F","inline": "true"},{"name": "Light Level","value": currLightInd,"inline": "true"},{"name": "Entry Notice","value": entryNoticeInd,"inline": "true"}]}]
     return embeds
 
-# gets expected values
+# gets expected values formatted for Discord
 def getExpected():
     embeds = [{"type": "rich","title": "Expected Readings","fields": [{"name": "Air Temperature","value": str(minAirTemp) + "-" + str(maxAirTemp) + " F","inline": "true"},{"name": "Humidity","value": str(minHum) + "-" + str(maxHum) + " %","inline": "true"},{"name": "PH","value": str(minPH) + "-" + str(maxPH),"inline": "true"},{"name": "Electric Conductivity","value": str(minElecCond) + "-" + str(maxElecCond) + " uS/cm","inline": "true"},{"name": "Water Temperature","value": str(minWaterTemp) + "-" + str(maxWaterTemp) + " F","inline": "true"},{"name": "Light Level","value": "Good","inline": "true"},{"name": "Entry Notice","value": "No Entry Detected","inline": "true"}]}]
     return embeds
+
+# gets current values formatted for Google Forms
+def getCurrentFormatted():
+    # store logins on the pico itself, not GitHub
+    formsPassword = ""
+    payload = "entry.906379933=" + str(currAirTemp) + "&entry.999512421=" + str(currHum) + "&entry.561794673=" + str(currPH) + "&entry.376241976=" + str(currElecCond) + "&entry.160733437=" + str(currWaterTemp) + "&entry.48490048=" + str(currLightInd) + "&entry.573586168=" + str(entryNoticeInd) + "&entry.270098587=" + str(formsPassword)
+    return payload
 
 # this function is the main body of the alert system, checks varaible values and alerts when needed
 def checkVariables():
@@ -132,7 +145,9 @@ def checkVariables():
           "content": "System Readings Stable",
           "embeds": getData()
         })
-        response = urequests.request("POST", url, headers=headers, data=payload)
+        response = urequests.request("POST", discordUrl, headers=discordHeaders, data=payload)
+        formsData = getCurrentFormatted();
+        google = urequests.request("POST", formsUrl, headers=formsHeaders, data=formsData)
     # alert if any value is not expected
     if (len(alertMessages) != 0):
         alertsOutput = "URGENT: "
@@ -144,12 +159,14 @@ def checkVariables():
           "content": alertsOutput,
           "embeds": getData()
         })
-        response = urequests.request("POST", url, headers=headers, data=payload)
+        response = urequests.request("POST", discordUrl, headers=discordHeaders, data=payload)
+        formsData = getCurrentFormatted();
+        google = urequests.request("POST", formsUrl, headers=formsHeaders, data=formsData)
         # output expected values
         payload = json.dumps({
           "embeds": getExpected()
         })
-        response = urequests.request("POST", url, headers=headers, data=payload)
+        response = urequests.request("POST", discordUrl, headers=discordHeaders, data=payload)
     alertMessages = []
 
 # start of main
@@ -169,4 +186,3 @@ while True:
     checkVariables()
     # waits 15 minutes
     sleep(60*15)
-

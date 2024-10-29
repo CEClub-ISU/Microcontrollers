@@ -17,7 +17,7 @@ lightSensor = machine.ADC(machine.Pin(27))
 
 humiditySensor = dht.DHT11(machine.Pin(4))
 
-pwm = machine.PWM(machine.Pin(2))	# PWM clock for use with voltage doubler
+pwm = machine.PWM(machine.Pin(2))  # PWM clock for use with voltage doubler
 pwm.freq(1000)      # Set the frequency value        
 pwm.duty_u16(32767)     # Set the duty cycle to 65535/2 to emulate a clock
 
@@ -168,26 +168,26 @@ def checkVariables():
         alertMessages.append("Humidity is Too High")
     if (currHum < minHum):
         alertMessages.append("Humidity is Too Low")
-    if (currPH > maxPH):
-        alertMessages.append("PH is Too High")
-    if (currPH < minPH):
-        alertMessages.append("PH is Too Low")
-    if (currElecCond > maxElecCond):
-        alertMessages.append("Electric Conductivity is Too High")
-    if (currElecCond < minElecCond):
-        alertMessages.append("Electric Conductivity is Too Low")
-    if (currWaterTemp > maxWaterTemp):
-        alertMessages.append("Water Temperature is Too High")
-    if (currWaterTemp < minWaterTemp):
-        alertMessages.append("Water Temperature is Too Low")
+#     if (currPH > maxPH):
+#         alertMessages.append("PH is Too High")
+#     if (currPH < minPH):
+#         alertMessages.append("PH is Too Low")
+#     if (currElecCond > maxElecCond):
+#         alertMessages.append("Electric Conductivity is Too High")
+#     if (currElecCond < minElecCond):
+#         alertMessages.append("Electric Conductivity is Too Low")
+#     if (currWaterTemp > maxWaterTemp):
+#         alertMessages.append("Water Temperature is Too High")
+#     if (currWaterTemp < minWaterTemp):
+#         alertMessages.append("Water Temperature is Too Low")
     if (currLight < 60000):
         alertMessages.append("Light Level is Too Low")
         currLightInd = "Low"
-    if (entryNotice != 0):
-        alertMessages.append("Entry Notice")
-        entryNoticeInd = "Entry Detected"
+#     if (entryNotice != 0):
+#         alertMessages.append("Entry Notice")
+#         entryNoticeInd = "Entry Detected"
     # alert on the hour if system is stable
-    if (len(alertMessages) == 0):	#temporarily removed isHour check
+    if ((isHour == True or justPluggedIn == True) and len(alertMessages) == 0):   #temporarily removed isHour check
         payload = json.dumps({
           "content": "System Readings Stable",
           "embeds": getData()
@@ -213,13 +213,12 @@ def checkVariables():
         payload = json.dumps({
           "embeds": getExpected()
         })
-        response = urequests.request("POST", discordUrl, headers=discordHeaders, data=payload)
+        expected = urequests.request("POST", discordUrl, headers=discordHeaders, data=payload)
+        expected.close()
     alertMessages = []
-    print("before: ", gc.mem_free())
     response.close()
     google.close()
     gc.collect()
-    print(gc.mem_free())
 
 # start of main
 wifiSetup()
@@ -227,16 +226,15 @@ wifiSetup()
     
 while True:
     # syncs program to 15 minute clock
-#    while rtc.datetime()[5] not in {0, 15, 30, 45}: temporarily commented out
-#        sleep(1)
-#    if (rtc.datetime()[5] == 0):
-#        isHour = True
-#    else:
-#        isHour = False
-    # take current readings
-#     currAirTemp = readAirTemp()
+    while rtc.datetime()[5] not in {0, 15, 30, 45}:
+        sleep(1)
+    if (rtc.datetime()[5] == 0):
+        isHour = True
+    else:
+       isHour = False
+
     # execute monitoring system
-#    justPluggedIn = False
+    justPluggedIn = False
     if not wlan.isconnected:
         wifiIndicator.value(0)
         wifiSetup()
@@ -244,4 +242,4 @@ while True:
     checkVariables()
     gc.collect()
     # waits 15 minutes
-    sleep(10)
+    sleep(15*60)
